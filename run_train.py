@@ -32,13 +32,13 @@ def main() -> None:
         description="Train the anchor-based CNN on BDD100K.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("--device",                                 type=torch.device, default="cuda" if torch.cuda.is_available() else "cpu", help="Training device, e.g. cpu, cuda, or cuda:0")
-    parser.add_argument("--model-dir",        "--model_dir",        type=Path,         default=Path("model.pt"),                               help="Output model weights path")
-    parser.add_argument("--log-dir",          "--log_dir",          type=Path,         default=Path("train.csv"),                              help="Output CSV path")
-    parser.add_argument("--epoch",                                  type=int,          default=20,                                             help="Number of training epochs")
-    parser.add_argument("--dataset-dir",      "--dataset_dir",      type=Path,         default=Path(__file__).parent / "dataset",              help="Directory with images, train.json, and val.json")
-    parser.add_argument("--batch-size",       "--batch_size",       type=int,          default=16,                                             help="Images per batch")
-    parser.add_argument("--init-weights-dir", "--init_weights_dir", type=Path,         default=None,                                           help="Initial model weights from a .pt file")
+    parser.add_argument("--device",                                 type=torch.device, default='cuda' if torch.cuda.is_available() else 'cpu', help='Training device, e.g. cpu, cuda, or cuda:0')
+    parser.add_argument("--model-dir",        "--model_dir",        type=Path,         default=Path('model.pt'),                               help='Output model weights path')
+    parser.add_argument("--log-dir",          "--log_dir",          type=Path,         default=Path('train.csv'),                              help='Output CSV path')
+    parser.add_argument("--epoch",                                  type=int,          default=20,                                             help='Number of training epochs')
+    parser.add_argument("--dataset-dir",      "--dataset_dir",      type=Path,         default=Path(__file__).parent / 'dataset',              help='Directory with images, train.json, and val.json')
+    parser.add_argument("--batch-size",       "--batch_size",       type=int,          default=16,                                             help='Images per batch')
+    parser.add_argument("--init-weights-dir", "--init_weights_dir", type=Path,         default=None,                                           help='Initial model weights from a .pt file')
     args = parser.parse_args()
     validate_cli_args(args, parser)
 
