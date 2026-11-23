@@ -1,6 +1,5 @@
 import csv
 from pathlib import Path
-from typing import TextIO
 
 import torch
 import torch.nn as nn
@@ -8,14 +7,15 @@ from torch.utils.data import DataLoader
 
 from tqdm.auto import tqdm
 
-if __package__:
-    from .anchors import match_anchors, calc_resulting_bboxes
-    from .arch import DetectionCNN
-    from .loss import calc_loss
-else:
-    from anchors import match_anchors, calc_resulting_bboxes
-    from arch import DetectionCNN
-    from loss import calc_loss
+from .anchors import match_anchors, calc_resulting_bboxes
+from .loss import calc_loss
+
+
+ANCHOR_SIZES = (
+    (24, 40), 
+    (64, 36), 
+    (160, 96)
+)
 
 
 def run_training(model:     nn.Module,
@@ -24,23 +24,20 @@ def run_training(model:     nn.Module,
                  optimizer: torch.optim.Optimizer,
                  n_epoch:   int,
                  device:    torch.device | str,
-                 log_dir:   str | Path | TextIO = "train_log.csv",
+                 log_dir:   str | Path = "train_log.csv",
 ) -> nn.Module:
     """Train the model and log mean batch losses by epoch."""
 
     device = torch.device(device)
     output_stride = model.backbone.output_stride
 
-    init_anchor_sizes = torch.tensor([
-        [24,  40],
-        [64,  36],
-        [160, 96],
-    ], device=device, dtype=torch.float32)
+    init_anchor_sizes = torch.tensor(ANCHOR_SIZES, device=device, dtype=torch.float32)
 
     log = Path(log_dir).open("a", encoding="utf-8", newline="")
     with log as log_file:
         writer = csv.writer(log_file)
-        writer.writerow(("epoch", "train_loss", "val_loss"))
+        if log_file.tell() == 0:
+            writer.writerow(("epoch", "train_loss", "val_loss"))
 
         for epoch in tqdm(range(1, n_epoch + 1)):
             model.train()
