@@ -26,7 +26,7 @@ def run_training(model:            nn.Module,
                  device:           torch.device | str,
                  *,
                  log_dir:          str | Path = "train_log.csv",
-                 early_stop_epoch: int = 20,
+                 early_stop_epoch: int   = 10,
                  early_stop_delta: float = 1e-3
 ) -> nn.Module:
     """Train the model and log mean batch losses by epoch.
