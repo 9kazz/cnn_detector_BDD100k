@@ -18,20 +18,28 @@ ANCHOR_SIZES = (
 )
 
 
-def run_training(model:     nn.Module,
-                 train_ldr: DataLoader,
-                 val_ldr:   DataLoader,
-                 optimizer: torch.optim.Optimizer,
-                 n_epoch:   int,
-                 device:    torch.device | str,
-                 log_dir:   str | Path = "train_log.csv",
+def run_training(model:            nn.Module,
+                 train_ldr:        DataLoader,
+                 val_ldr:          DataLoader,
+                 optimizer:        torch.optim.Optimizer,
+                 n_epoch:          int,
+                 device:           torch.device | str,
+                 *,
+                 log_dir:          str | Path = "train_log.csv",
+                 early_stop_epoch: int = 20,
+                 early_stop_delta: float = 1e-3
 ) -> nn.Module:
-    """Train the model and log mean batch losses by epoch."""
+    """Train the model and log mean batch losses by epoch.
+    
+    Stop after early_stop_epoch epochs without a val loss improvement.
+    """
 
     device = torch.device(device)
     output_stride = model.backbone.output_stride
 
-    init_anchor_sizes = torch.tensor(ANCHOR_SIZES, device=device, dtype=torch.float32)
+    init_anchor_sizes   = torch.tensor(ANCHOR_SIZES, device=device, dtype=torch.float32)
+    best_val_loss       = float("inf")
+    early_stop_patience = early_stop_epoch
 
     log = Path(log_dir).open("a", encoding="utf-8", newline="")
     with log as log_file:
@@ -43,6 +51,7 @@ def run_training(model:     nn.Module,
             model.train()
             train_loss_sum = 0.0
             n_images = 0
+            
             for images, ref_targets in train_ldr:
                 optimizer.zero_grad()
                 loss = calc_batch_loss(model, images, ref_targets, init_anchor_sizes, output_stride, device)
@@ -58,6 +67,16 @@ def run_training(model:     nn.Module,
             val_loss   = calc_val_loss(model, val_ldr, init_anchor_sizes, device)
             writer.writerow((epoch, train_loss, val_loss))
             log_file.flush()
+
+            # Early stop.
+            if val_loss < best_val_loss - early_stop_delta:
+                best_val_loss = val_loss
+                early_stop_patience = early_stop_epoch
+            else:
+                early_stop_patience -= 1
+
+            if early_stop_patience <= 0:
+                break
 
     return model
 
